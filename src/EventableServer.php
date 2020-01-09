@@ -69,7 +69,7 @@ class EventableServer extends EventEmitter
 		'schemaCacheDir' => sys_get_temp_dir() . \DIRECTORY_SEPARATOR . get_current_user(). \DIRECTORY_SEPARATOR . 'json-schema-store' . \DIRECTORY_SEPARATOR,
 		'discovery' => 	$discovery,
 		'meta' => [
-		  'openrpc' => 'GENERATED FIELD: Do Not Edit',
+		  'openrpc' => '1.0.0-rc1',
 		  "info" => [
               "title" => "JSON-RPC Server",
               "description" =>"This the RPC-part of an Frdlweb API Server definition https://look-up.webfan3.de/?goto=oid%3A1.3.6.1.4.1.37553.8.1.8.1.13878",
@@ -303,7 +303,7 @@ class EventableServer extends EventEmitter
 		if($response instanceof Error){
 			$Event = self::event('error', $request, $response, $Server);			
 			$Event->setArgument('procedure', $procedure);
-			$Event->setResult($result);
+			$Event->setResult($response);
 			$Server->emit($Event->getName(), $Event);			
 		}
 		
@@ -321,21 +321,32 @@ class EventableServer extends EventEmitter
 		
 			$Event = self::event('end', $request, $response, $Server);			
 			$Event->setArgument('procedure', $procedure);
-		    $Event->setResult($result->result);
+		    $Event->setArgument('response', $response);
+		 //  $Event->setResult($response);	    
+		      
+		
 			$Server->emit($Event->getName(), $Event);	
 		
+		$r = ($Event->getResult()) ? $Event->getResult() : $Event->getArgument('response');
 		
-        return $request instanceof Request && null === $request->id() ?
-            null : \json_encode($response);
+        return $request instanceof Request && null === $request->id() 
+							  ? null : \json_encode($r);
     }	
 	
 	
 	
     public static function validateResponse(&$validation = null, \stdClass $schema, $data, EventableServer $Server = null): bool
     {
-			
 		
-        \assert(false !== \json_encode($data));
+		
+			$Event = self::event('validate.before', null, null, $Server);
+		
+			$Event->setArgument('payload', $data);
+    		$Server->emit($Event->getName(), $Event);	
+		
+	
+		
+        \assert(false !== \json_encode($Event->getArgument('payload')));
 
 		
 		
@@ -354,11 +365,18 @@ class EventableServer extends EventEmitter
 									 $config['schemaLoaderDirs'], 
 									 $config['schemaCacheDir']))
 		
-            ->dataValidation($data, $schema);
+            ->dataValidation($Event->getArgument('payload'), $schema);
 		
 		
-	
-		return $validation->isValid();
+		
+		
+		
+			$Event = self::event('validate.after', null, null, $Server);
+		    $Event->setArgument('validation', $validation);
+	    	$Event->setResult($validation->isValid());
+    		$Server->emit($Event->getName(), $Event);			
+		
+		return $Event->getResult();
     }
 	
 }
