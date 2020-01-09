@@ -6,7 +6,7 @@
   "require" : {
 	  "php": ">=7.1",
 		"frdl/json-rpc-server-dicoverable" : "*",
-    ""frdl/event-module" : "*"
+    "frdl/event-module" : "*"
   },	  
   "autoload": {
         "psr-4": {
