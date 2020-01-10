@@ -115,7 +115,7 @@ class EventableServer extends EventEmitter
 		}
     }	
 
-   public function discoveryFactory(ContainerInterface $c) : DiscoverMethod{
+   public function discoveryFactory(ContainerInterface $c) : MethodDiscoverableInterface{
           $DiscoverMethod = new DiscoverMethod($this);
           $DiscoverMethod->config(null, $this->config['meta']);
 	   
