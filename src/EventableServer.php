@@ -270,7 +270,7 @@ class EventableServer extends EventEmitter
 		
 		
         if (!Validator::validate($procedure->getSpec(), $request->params())) {
-            return self::end(Error::invalidParams($request->id()), $request);
+            return self::end(Error::invalidParams($request->id()), $request, $procedure, $Server);
         }
 
         $stack = MiddlewareStack::compose(
@@ -304,20 +304,21 @@ class EventableServer extends EventEmitter
 			$Event = self::event('error', $request, $response, $Server);			
 			$Event->setArgument('procedure', $procedure);
 			$Event->setResult($response);
-			$Server->emit($Event->getName(), $Event);			
+			$Server->emit($Event->getName(), $Event);	
 		}
-		
+		 
 		if( $procedure && true !== $response instanceof Error && $procedure instanceof MethodDiscoverableInterface){
 			
 		   $spec = 	$procedure->getResultSpec();
 				
 			$result = json_decode(json_encode($response));
-
-           if (!self::validateResponse($validation, $spec, $result->result, $Server)) {
+	 
+           if (!self::validateResponse($validation, $spec, $result->result, $Server)) {			 
 			   $ea=$validation->getFirstError()->errorArgs();
-              return self::end(new Error($request->id(), 'Invalid result '.print_r($ea,true),  $result->result), $request); 
+              return self::end(new Error($request->id(), 'Invalid result '.print_r($ea,true),  $result->result), $request, $procedure, $Server); 
            }				
 		}
+	
 		
 			$Event = self::event('end', $request, $response, $Server);			
 			$Event->setArgument('procedure', $procedure);
@@ -328,7 +329,7 @@ class EventableServer extends EventEmitter
 			$Server->emit($Event->getName(), $Event);	
 		
 		$r = ($Event->getResult()) ? $Event->getResult() : $Event->getArgument('response');
-		
+			
         return $request instanceof Request && null === $request->id() 
 							  ? null : \json_encode($r);
     }	
@@ -339,9 +340,8 @@ class EventableServer extends EventEmitter
     {
 		
 		
-			$Event = self::event('validate.before', null, null, $Server);
-		
-			$Event->setArgument('payload', $data);
+		$Event = self::event('validate.before', null, null, $Server);		
+		$Event->setArgument('payload', $data);
     		$Server->emit($Event->getName(), $Event);	
 		
 	
@@ -371,10 +371,11 @@ class EventableServer extends EventEmitter
 		
 		
 		
-			$Event = self::event('validate.after', null, null, $Server);
-		    $Event->setArgument('validation', $validation);
-	    	$Event->setResult($validation->isValid());
-    		$Server->emit($Event->getName(), $Event);			
+			
+	    $Event = self::event('validate.after', null, null, $Server);
+	    $Event->setArgument('validation', $validation);
+	    $Event->setResult($validation->isValid());
+    	    $Server->emit($Event->getName(), $Event);			
 		
 		return $Event->getResult();
     }
