@@ -32,6 +32,9 @@ use Opis\JsonSchema\Validator as OpisValidator;
 use Webfan\Homepagesystem\EventFlow\State as EventEmitter;
 use webfan\hps\Event as Event;
 
+
+
+
 class EventableServer extends EventEmitter 
 {
 
@@ -113,6 +116,9 @@ class EventableServer extends EventEmitter
 				});
 				
 		}
+		
+		
+		
     }	
 
    public function discoveryFactory(ContainerInterface $c) : MethodDiscoverableInterface{
@@ -197,10 +203,12 @@ class EventableServer extends EventEmitter
      */
     public function run(string $raw): ?string
     {
-        $input = Input::fromString($raw);
+		
 
+        $input = Input::fromString($raw, true);
+	
         if (!$input->parsable()) {
-            return self::end(Error::parsing());
+            return self::end(Error::parsing(), null, null, $this);
         }
 	
 		$Event = self::event('run.before', null, null, $this);
@@ -210,7 +218,7 @@ class EventableServer extends EventEmitter
 
         if ($input->isArray()) {
             if ($this->tooManyBatchRequests($input)) {
-                return self::end(Error::tooManyBatchRequests($this->batchLimit));
+                return self::end(Error::tooManyBatchRequests($this->batchLimit), null, null, $this);
             }			
             return $this->batch($input);
         }
@@ -256,7 +264,7 @@ class EventableServer extends EventEmitter
         $request = new Request($input);
 
         if (!\array_key_exists($request->method(), $this->methods)) {
-            return self::end(Error::unknownMethod($request->id()), $request);
+            return self::end(Error::unknownMethod($request->id()), $request, null, $this);
         }
 
         try {
@@ -264,7 +272,7 @@ class EventableServer extends EventEmitter
                 $this->container->get($this->methods[$request->method()])
             );
         } catch (ContainerExceptionInterface | NotFoundExceptionInterface $e) {
-            return self::end(Error::internal($request->id()), $request);
+            return self::end(Error::internal($request->id()), $request,  null, $this);
         }
 
 		
