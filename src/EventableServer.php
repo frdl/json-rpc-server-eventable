@@ -270,7 +270,7 @@ class EventableServer extends EventEmitter
 		
 		
         if (!Validator::validate($procedure->getSpec(), $request->params())) {
-            return self::end(Error::invalidParams($request->id()), $request, $procedure, $Server);
+            return self::end(Error::invalidParams($request->id()), $request, $procedure, $this);
         }
 
         $stack = MiddlewareStack::compose(
