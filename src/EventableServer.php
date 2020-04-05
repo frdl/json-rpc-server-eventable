@@ -83,7 +83,8 @@ class EventableServer extends EventEmitter
 		     'name' => 'Webfan Homepagesystem RPC API',
 		     'summary' => 'Webfan Homepagesystem RPC API methods description',
 		     'description' => 'This is the RPC part of an implementation of the Frdlweb API Specification (1.3.6.1.4.1.37553.8.1.8.1.13878)',
-		     'url' => 'https://'.$_SERVER['SERVER_NAME'].'/software-center/modules-api/rpc/0.0.2/',
+		   //  'url' => 'https://'.$_SERVER['SERVER_NAME'].'/software-center/modules-api/rpc/0.0.2/',
+		 	  'url' => 'https://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'],
 		    ]
 			  
 		  ],
